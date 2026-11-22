@@ -16,8 +16,16 @@ límite de resultados, caché en SQLite, CORS y endpoints de salud.
 
 | Contenedor | Imagen | RAM |
 |---|---|---|
-| searxng | 404 MB | ~124 MB |
-| api | 74 MB | ~16 MB |
+| searxng | 404 MB | ~121 MB |
+| api (Go) | **8 MB** | **~2.3 MB** |
+| api (Python, opcional) | 74 MB | ~15.5 MB |
+
+La API en Go es la que viene por defecto. La de Python sigue disponible con
+`docker compose --profile python up -d` por si preferís tocar código Python.
+
+**Nota honesta:** la API pesa poco, pero SearXNG es el que manda: ~121 MB de RAM
+y 404 MB de disco, hagas lo que hagas con la API. Pasar de Python a Go baja el
+total de ~137 MB a ~123 MB. Es una mejora real, pero no transforma el VPS.
 
 ## Arrancar
 
@@ -122,8 +130,11 @@ caído se reintente en minutos en vez de quedar horas afuera.
 
 ```
 .
+├── api-go/
+│   ├── main.go         # API en Go (default, binario estatico)
+│   └── Dockerfile
 ├── api/
-│   ├── app.py          # API (solo stdlib, sin dependencias)
+│   ├── app.py          # API en Python (opcional, profile "python")
 │   └── Dockerfile
 ├── searxng/
 │   └── settings.yml    # motores, timeouts, límites
@@ -137,4 +148,7 @@ caído se reintente en minutos en vez de quedar horas afuera.
 
 - SearXNG no publica su puerto: solo la API lo alcanza por la red interna de Docker.
 - La caché vive en el volumen `cache-data`, sobrevive a los reinicios.
-- `api/app.py` no tiene dependencias externas, así que la imagen es Alpine + Python y nada más.
+- La API en Go compila a un binario estático y corre sobre `scratch`: 8 MB de imagen,
+  sin sistema operativo adentro.
+- Corre con `read_only: true` y límite de 32 MB de RAM.
+- La API en Python no tiene dependencias externas: Alpine + Python y nada más.

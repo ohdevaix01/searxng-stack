@@ -31,10 +31,11 @@ services:
       retries: 3
       start_period: 20s
 
+  # API en Go: la opcion liviana (default)
   api:
     build:
       context: .
-      dockerfile: api/Dockerfile
+      dockerfile: api-go/Dockerfile
     container_name: searxng-api
     restart: unless-stopped
     depends_on:
@@ -42,6 +43,41 @@ services:
         condition: service_started
     ports:
       - "${API_PORT:-8080}:8080"
+    volumes:
+      - cache-data:/data
+    environment:
+      - SEARX_URL=http://searxng:8080
+      - DEFAULT_LIMIT=${DEFAULT_LIMIT:-20}
+      - MAX_LIMIT=${MAX_LIMIT:-50}
+      - CACHE_TTL=${CACHE_TTL:-3600}
+      - API_KEY=${API_KEY:-}
+      - UPSTREAM_TIMEOUT=${UPSTREAM_TIMEOUT:-25}
+      - CACHE_FILE=/data/cache.json
+    read_only: true
+    tmpfs:
+      - /tmp
+    mem_limit: 32m
+    cpus: 0.5
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+  # API en Python: misma API, mas pesada. Usar con:
+  #   docker compose --profile python up -d
+  api-python:
+    profiles: ["python"]
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    container_name: searxng-api-python
+    restart: unless-stopped
+    depends_on:
+      searxng:
+        condition: service_started
+    ports:
+      - "${API_PORT_PYTHON:-8081}:8080"
     volumes:
       - cache-data:/data
     environment:
