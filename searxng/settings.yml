@@ -1,0 +1,63 @@
+use_default_settings: true
+
+general:
+  instance_name: "SearXNG API"
+  contact_url: "https://github.com/ohdevaix01/searxng-stack"
+  enable_metrics: false
+
+server:
+  secret_key: "CAMBIAR_ESTO_EN_PRODUCCION"
+  limiter: false
+  public_instance: false
+  image_proxy: false
+  port: 8080
+  bind_address: "0.0.0.0"
+  method: "GET"
+
+search:
+  safe_search: 0
+  autocomplete: ""
+  default_lang: "es"
+  formats:
+    - html
+    - json
+  # Si un motor falla, se reintenta pronto en vez de quedar horas caido
+  ban_time_on_fail: 3
+  max_ban_time_on_fail: 60
+  suspended_times:
+    SearxEngineAccessDenied: 600
+    SearxEngineCaptcha: 900
+    SearxEngineTooManyRequests: 300
+    cf_SearxEngineCaptcha: 3600
+    cf_SearxEngineAccessDenied: 1800
+    recaptcha_SearxEngineCaptcha: 3600
+
+outgoing:
+  request_timeout: 4.0
+  max_request_timeout: 8.0
+  pool_connections: 20
+  retries: 1
+  enable_http2: true
+
+ui:
+  static_use_hash: true
+
+# Motores elegidos por relacion resultado/recursos en VPS chico.
+# Google directo queda apagado: desde IP de datacenter devuelve access denied.
+engines:
+  - name: google
+    disabled: true
+  - name: google cse
+    disabled: false
+  - name: bing
+    disabled: false
+  - name: duckduckgo
+    disabled: false
+  - name: brave
+    disabled: false
+  - name: mojeek
+    disabled: false
+  - name: startpage
+    disabled: false
+  - name: wikipedia
+    disabled: false
