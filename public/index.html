@@ -102,6 +102,7 @@
     <p class="ep"><code>GET /search?q=tu+busqueda&limit=20</code></p>
     <p class="ep">Parámetros: <code>q</code> (obligatorio), <code>limit</code> (1-50), <code>lang</code>, <code>category</code>, <code>engines</code>, <code>time_range</code>.</p>
     <p class="ep">Otros endpoints: <code>/health</code> y <code>/stats</code>.</p>
+    <p class="ep">Filtro de relevancia activo: descarta resultados que no contienen los términos buscados, y si un motor devuelve basura (bloqueo o caché ajena) lo descarta entero. Se ve en <code>filtered</code>. Para apagarlo: <code>&amp;strict=0</code>.</p>
     <details>
       <summary>Ver ejemplo de respuesta JSON</summary>
       <pre id="json">Todavía no hay búsquedas.</pre>
@@ -125,6 +126,12 @@ function render(data, ms){
       (data.cached ? 'HIT' : 'MISS') + '</b></span>' +
     (data.unresponsive_engines && data.unresponsive_engines.length
       ? '<span class="pill">motores caídos <b>' + data.unresponsive_engines.length + '</b></span>' : '') +
+    (data.filtered && data.filtered.dropped_engines &&
+      Object.keys(data.filtered.dropped_engines).length
+      ? '<span class="pill">descartados <b>' +
+        Object.keys(data.filtered.dropped_engines).join(', ') + '</b></span>' : '') +
+    (data.filtered && data.filtered.dropped_results
+      ? '<span class="pill">ruido filtrado <b>' + data.filtered.dropped_results + '</b></span>' : '') +
     '</div>';
   stats.innerHTML = pills;
 

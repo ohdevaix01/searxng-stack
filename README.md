@@ -56,6 +56,7 @@ Abrí `http://TU_IP:8080/` en el navegador para ver la demo.
 | `engines` | — | Forzar motores: `bing,brave`. |
 | `time_range` | — | `day`, `week`, `month`, `year`. |
 | `pageno` | 1 | Página. |
+| `strict` | 1 | `0` apaga el filtro de relevancia. |
 
 Respuesta:
 
@@ -74,6 +75,11 @@ Respuesta:
   ],
   "suggestions": [],
   "unresponsive_engines": [],
+  "filtered": {
+    "raw_results": 39,
+    "dropped_results": 4,
+    "dropped_engines": {"bing": 10}
+  },
   "cached": false,
   "took_ms": 1840
 }
@@ -106,6 +112,32 @@ Todas en `.env`. Ver `.env.example`.
 | `API_KEY` | vacío | Si se pone, exige `?key=` o header `X-API-Key`. |
 | `UPSTREAM_TIMEOUT` | 25 | Segundos máximos esperando a SearXNG. |
 | `SEARXNG_SECRET` | — | Clave interna de SearXNG. **Cambiar en producción.** |
+| `MIN_RELEVANCE` | 0.34 | Fracción de términos que debe matchear un resultado. 0.5 = más estricto, 0.2 = más permisivo. |
+
+## Filtro de relevancia
+
+SearXNG devuelve lo que cada motor le da, sin juzgar. Y algunos motores, cuando te
+bloquean, no devuelven un error: devuelven una página genérica o resultados cacheados
+de otras consultas. En la práctica eso se ve como resultados que no tienen nada que ver.
+
+Medido en este server, con `q=receta de locro`:
+
+| Motor | Resultados | Relevantes |
+|---|---|---|
+| google cse | 20 | 20 (100%) |
+| duckduckgo | 10 | 10 (100%) |
+| bing | 10 | 0 (0%) — devolvía "Femi Babalola, Boston College" |
+
+La API lo resuelve en dos pasos:
+
+1. **Relevancia por resultado.** Calcula qué fracción de los términos buscados aparece
+   en el título, el extracto o la URL. Con raíz aproximada, así `clubes` matchea `club`.
+   Los que quedan por debajo de `MIN_RELEVANCE` (0.34) se descartan.
+2. **Detección de motor intoxicado.** Si un motor devuelve 3 o más resultados y menos
+   del 30% son relevantes, se descarta el lote completo de ese motor.
+
+Lo que se descartó se informa en el campo `filtered`, así siempre se ve qué pasó.
+Para apagarlo: `&strict=0`.
 
 ## Motores
 
